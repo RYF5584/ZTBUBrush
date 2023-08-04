@@ -1,0 +1,262 @@
+# coding: utf-8
+# @Author: Ruan
+import base64
+import json
+import re
+import random
+import string
+import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+
+
+
+
+class BrushClass:
+    """
+        51爱学教 云平台
+        ZTBU刷课
+    """
+    def __init__(self, token:str):
+        """
+            传Token就行，开发者工具自己抓一下就可以，不想写登录了，太麻烦
+        :param token:
+        """
+        assert token.startswith('aHR'),'Token格式不对,应该是aHR开头!'
+        self.token = token
+        self.random_code = self.generate_webkit_boundary()
+        self.random_code = 'WebKitFormBoundaryv0bzBwXwe0NLNG8B'
+        self.class_dict = {}
+        self.stid = None
+        self.get_stid()
+
+    @classmethod
+    def generate_webkit_boundary(cls, random_part_length=16):
+        prefix = "WebKitFormBoundary"
+        random_part = ''.join(random.choices(string.ascii_letters + string.digits, k=random_part_length))
+        return prefix + random_part
+
+    @property
+    def api_headers(self):
+        headers = {
+            "Host": "www.51ixuejiao.com",
+            "Connection": "keep-alive",
+            "X-Custom-Return": "json",
+            "Authorization": f"Basic {self.token}",
+            "X-Custom-Action": "null",
+            "X-Custom-Header": "WeishaKeji",
+            "Access-Control-Allow-Methods": "POST,GET,DELETE,PUT,PATCH,HEAD,OPTIONS",
+            "Accept": "application/json, text/plain, */*",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36 Edg/115.0.1901.188",
+            "Encrypt": "true",
+            "Access-Control-Allow-Headers": "X-Requested-With",
+            "X-Custom-Method": "get",
+            "Referer": "http://www.51ixuejiao.com/student/course/index",
+        }
+        return headers
+
+    @property
+    def olid_headers(self):
+        headers = {
+            "Host": "www.51ixuejiao.com",
+            "Proxy-Connection": "keep-alive",
+            "Accept": "application/json, text/plain, */*",
+            "Access-Control-Allow-Headers": "X-Requested-With",
+            "Authorization": f"Basic {self.token}",
+            "X-Custom-Header": "weishakeji",
+            "Access-Control-Allow-Methods": "POST,GET,DELETE,PUT,PATCH,HEAD,OPTIONS",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36",
+            "Referer": "http://www.51ixuejiao.com/web/course/study.712",
+        }
+        return headers
+
+    def brush_one_class(self, couid, olid):
+        try:
+            code = self.random_code
+            url = 'http://www.51ixuejiao.com/api/v1/Course/StudyLog'
+            data = f'''------{code}
+Content-Disposition: form-data; name="couid"
+
+{couid}
+------{code}
+Content-Disposition: form-data; name="olid"
+
+{olid}
+------{code}
+Content-Disposition: form-data; name="playTime"
+
+3600
+------{code}
+Content-Disposition: form-data; name="studyTime"
+
+3600
+------{code}
+Content-Disposition: form-data; name="totalTime"
+
+3600
+------{code}--
+'''
+            print(data)
+            headers = {
+                "Host": "www.51ixuejiao.com",
+                "Connection": "keep-alive",
+                "Content-Length": "527",
+                "X-Custom-Return": "json",
+                "Authorization": f"Basic {self.token}",
+                "X-Custom-Action": "null",
+                "X-Custom-Header": "WeishaKeji",
+                "Access-Control-Allow-Methods": "POST,GET,DELETE,PUT,PATCH,HEAD,OPTIONS",
+                "Content-Type": f"multipart/form-data; boundary=----{code}",
+                "Accept": "application/json, text/plain, */*",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36 Edg/115.0.1901.188",
+                "Encrypt": "true",
+                "Access-Control-Allow-Headers": "X-Requested-With",
+                "X-Custom-Method": "post",
+                "Origin": "http://www.51ixuejiao.com",
+                "Referer": f"http://www.51ixuejiao.com/web/course/study.{couid}?referrer=http%3A%2F%2Fwww.51ixuejiao.com%2Fweb%2Fcourse%2Fdetail.{couid}&olid={olid}",
+            }
+
+            res = requests.post(url, data=data, headers=headers,verify=False)
+            data = base64.b64decode(res.text).decode('utf-8')
+            print(data)
+            if re.search(r'success"\s*:\s*true', data):
+                return True
+        except:
+            return
+
+    @staticmethod
+    def decode_unicode(encoded_unicode):
+        encoded_unicode = encoded_unicode.replace('%u', '\\u')
+        decoded_string = bytes(encoded_unicode, 'ascii').decode('unicode-escape')
+        return decoded_string
+
+    def get_stid(self):
+        url = 'http://www.51ixuejiao.com/api/v1/Account/Current'
+        res = requests.get(url, verify=False, headers=self.api_headers)
+        data = base64.b64decode(res.text).decode('utf-8')
+        self.stid = re.search(r'Ac_ID*"\s*:\s*(\d+),',data).group(1)
+
+        return self.stid
+
+    def get_all_class(self):
+        url = 'http://www.51ixuejiao.com/api/v1/Course/purchased'
+        params = {
+            "acid": self.stid,
+            "search": "",
+            "enable": "true",
+            "size": "10",
+            "index": "1"
+        }
+        res = requests.get(url, params=params, verify=False, headers=self.api_headers)
+        res.raise_for_status()
+        res.encoding = 'utf-8'
+        data = base64.b64decode(res.text).decode('utf-8')
+        data = re.sub(r'eval\(.*?rce\)', '\"\"', data)
+        data = json.loads(data)
+        classes_info = data.get("result")
+        for info in classes_info:
+            couids = info.get("Cou_ID")
+            class_name = info.get("Cou_Name")
+            class_name = self.decode_unicode(class_name)
+            olids = self.get_olids(couids)
+            if not olids:
+                return
+            self.class_dict[couids] = {
+                "olids": olids,
+                "name": class_name
+            }
+            print(f'识别到账号课程:\n{class_name}----Couids:{couids}----Olids:{olids}')
+        return self.class_dict
+
+    def get_olids(self, couids):
+        url = f'http://www.51ixuejiao.com/api/v1/Course/LogForOutlineVideo?stid={self.stid}&couid={couids}'
+        res = requests.get(url, verify=False, headers=self.api_headers)
+        res.raise_for_status()
+        text = base64.b64decode(res.text).decode('utf-8')
+        # print(text)
+        res.encoding = 'utf-8'
+        text = text.replace(' ', '')
+        oilds = re.findall(r'Ol_ID\s*:\s*\"(\d+)\"', text)
+        return oilds
+
+    def main(self):
+        suc_once = 0
+        bad_once = 0
+        self.get_all_class()
+        sum_lesson = 0
+        for x in self.class_dict.values():
+            sum_lesson += len(list(x["olids"]))
+        print(f'数据获取完毕,共计{len(self.class_dict)}个科目,{sum_lesson}节课!')
+        print(self.class_dict)
+        input('连续点击回车开始刷,多线程秒刷！！！')
+        with ThreadPoolExecutor(max_workers=20) as Pool:
+            threads = []
+            for key, value in self.class_dict.items():
+                couid = key
+                name = value["name"]
+                for olid in value["olids"]:
+
+                    thread = Pool.submit(self.brush_one_class, couid=couid, olid=olid)
+                    thread.name = f'课程:{name} | Couid:{couid} | Olid:{olid}'
+                    print(thread.name + '   已经提交线程!!!')
+                    threads.append(thread)
+            for thread in as_completed(threads):
+                res = thread.result()
+                name = thread.name
+                if res:
+                    suc_once += 1
+                else:
+                    bad_once += 1
+                print(f'{name} : {"完成" if res else "失败!!!!!"}')
+        print(f'共计{sum_lesson}节课,成功:{suc_once}次,失败:{bad_once}次!!!')
+        print(f'''
+刷课的数据,10分钟后才会更新,不会立即更新!!!!!!
+刷课的数据,10分钟后才会更新,不会立即更新!!!!!!
+刷课的数据,10分钟后才会更新,不会立即更新!!!!!!
+刷课的数据,10分钟后才会更新,不会立即更新!!!!!!
+刷课的数据,10分钟后才会更新,不会立即更新!!!!!!
+
+如果十几分钟都显示没，直接多刷几遍！！！！！
+所以不要着急,只要显示成功,就肯定是成功了!!!
+        ''')
+        print(f'''
+如果想让立即生效，点击->课程->综合成绩->更新学习记录!!!!
+如果想让立即生效，点击->课程->综合成绩->更新学习记录!!!!
+如果想让立即生效，点击->课程->综合成绩->更新学习记录!!!!
+如果想让立即生效，点击->课程->综合成绩->更新学习记录!!!!
+如果想让立即生效，点击->课程->综合成绩->更新学习记录!!!!
+如果想让立即生效，点击->课程->综合成绩->更新学习记录!!!!
+''')
+
+
+
+if __name__ == '__main__':
+    print(f'''
+    ******* 51爱学教云课堂AutoStudy1.0 *******
+         本程序仅用于学习,切勿用于非法用途
+                By:Ruan
+            CSDN: https://blog.csdn.net/qq_34511096?type=blog
+            GitHub: https://github.com/RYF5584
+            知乎: https://www.zhihu.com/people/eternal-82-2
+        程序会自动识别账号中存在的课程，已经过期的不会识别！！！
+        只能刷课，题目做不了！！！
+        刷课的数据,10分钟后才会更新,不会立即更新!!!!!!
+        但是刷完以后，你点进视频，就会显示100%了
+        学习进度10分钟后才会有变化！！
+        如果想让立即生效，点击->课程->综合成绩->更新学习记录!
+    ******* 51爱学教云课堂AutoStudy1.0 *******
+
+    ''')
+
+    while True:
+        try:
+            token = input(
+                '请输入token:请点击浏览器开发者工具\n登录账号后随便点击一个网络请求,在请求标头中寻找Authorization参数,请复制Basic 后面所有（应该是aHR开头）,\n请输入:').strip()
+            spider = BrushClass(token=token)
+            print(spider.get_stid())
+            spider.main()
+            if input('回车继续刷课(q退出)......').lower() == 'q':
+                break
+        except Exception as e:
+            print(e)
+
