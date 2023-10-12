@@ -73,7 +73,7 @@ class BrushClass:
     def brush_one_class(self, couid, olid):
         try:
             code = self.random_code
-            url = 'http://www.51ixuejiao.com/api/v1/Course/StudyLog'
+            url = 'http://www.51ixuejiao.com/api/v2/Course/StudyLog'
             data = f'''------{code}
 Content-Disposition: form-data; name="couid"
 
@@ -131,7 +131,7 @@ Content-Disposition: form-data; name="totalTime"
         return decoded_string
 
     def get_stid(self):
-        url = 'http://www.51ixuejiao.com/api/v1/Account/Current'
+        url = 'http://www.51ixuejiao.com/api/v2/Account/Current'
         res = requests.get(url, verify=False, headers=self.api_headers)
         data = base64.b64decode(res.text).decode('utf-8')
         self.stid = re.search(r'Ac_ID*"\s*:\s*(\d+),',data).group(1)
@@ -139,7 +139,7 @@ Content-Disposition: form-data; name="totalTime"
         return self.stid
 
     def get_all_class(self):
-        url = 'http://www.51ixuejiao.com/api/v1/Course/purchased'
+        url = 'http://www.51ixuejiao.com/api/v2/Course/purchased'
         params = {
             "acid": self.stid,
             "search": "",
@@ -169,7 +169,7 @@ Content-Disposition: form-data; name="totalTime"
         return self.class_dict
 
     def get_olids(self, couids):
-        url = f'http://www.51ixuejiao.com/api/v1/Course/LogForOutlineVideo?stid={self.stid}&couid={couids}'
+        url = f'http://www.51ixuejiao.com/api/v2/Course/LogForOutlineVideo?stid={self.stid}&couid={couids}'
         res = requests.get(url, verify=False, headers=self.api_headers)
         res.raise_for_status()
         text = base64.b64decode(res.text).decode('utf-8')
