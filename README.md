@@ -1,4 +1,6 @@
-<<<<<<< HEAD
+
+# 不再更新任何版本， 有需要请联系VX：RSCompanyCEO
+# 不再更新任何版本， 有需要请联系VX：RSCompanyCEO
 # **郑州工商学院-51爱学教云学院秒刷课程脚本**
 
 ## 郑州工商学院-51爱学教云学院秒刷课程脚本，一键秒刷，1秒全部刷完！
@@ -19,11 +21,8 @@
 
 ### 1.3 F12或者网页右键->检查打开开发者工具，然后按图上操作！！
 
-<<<<<<< HEAD
-![img](.\assets\clip_image002.jpg)
-=======
+
 ![img](https://github.com/RYF5584/ZTBUBrush/blob/main/assets/clip_image002.jpg)
->>>>>>> 482d865948d00d1d1423b29cdd47a85dc073a569
 
 **Token****示例：**
 
@@ -31,11 +30,10 @@
 
 # **2.** **打开程序**
 
-<<<<<<< HEAD
-![文本  描述已自动生成](.\assets\clip_image004.jpg)
-=======
+
+
 ![文本  描述已自动生成](https://github.com/RYF5584/ZTBUBrush/blob/main/assets/clip_image004.jpg)
->>>>>>> 482d865948d00d1d1423b29cdd47a85dc073a569
+
 
 **把刚刚抓的****Token****复制进去回车，会自动识别你现在需要学习的课程！**
 
@@ -51,11 +49,10 @@
 
 
  
-=======
+
 # 很多人不会加载md文件，所以写Word里面了，用法见那个docx文件
 >>>>>>> 852b5bdc3fe40dfb3ccaa0107d0ff9520d9d5ed3
-=======
-![文本  描述已自动生成](https://github.com/RYF5584/ZTBUBrush/blob/main/assets/clip_image006.jpg)
+
 
 # **4.** **更新学习记录**
 
@@ -63,4 +60,4 @@
 
 
  
->>>>>>> 482d865948d00d1d1423b29cdd47a85dc073a569
+
